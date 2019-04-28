@@ -1,6 +1,6 @@
 # go-fsm
 
-go-fsm is a Golang library that can be used to construct finite-state machines. 
+A Golang library that can be used to construct finite-state machines.
 
 A finite-state machine is an abstract machine that can be in exactly one of a finite number of states at any 
 given time.
