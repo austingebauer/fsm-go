@@ -1,1 +1,1 @@
-# stm-go
+# fsm-go
