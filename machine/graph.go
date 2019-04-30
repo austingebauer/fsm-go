@@ -21,27 +21,45 @@ strict digraph stategraph {
 	dotFileFooter = "}"
 )
 
-// LogStateTransitionGraph ...
-func (sm *FiniteStateMachine) LogStateTransitionGraph(filePath string) error {
+const (
+	dotFileName = "dot_graph"
+	dotFileExtension = "gv"
+)
+
+// LogStateTransitionGraph enables tracing of states and transitions for the life of the finite-state machine.
+// After the finite-state machine has reached a terminal or error state, a file named 'dot_graph.gv' will be
+// created in the passed file path. The contents of the 'dot_graph.gv' file will be in DOT graph description
+// language format, which allows rendering of a directed graph of the states and transitions made by the
+// finite-state machine.
+//
+// If the passed string is empty, the file will be logged to the directory that the program was executed in.
+func (fsm *FiniteStateMachine) LogStateTransitionGraph(path string) error {
+	// If no path supplied, log to the directory that the program was executed in
+	if path == "" {
+		path = "."
+	}
+	filePath := fmt.Sprintf("%s/%s.%s", strings.TrimSuffix(path, "/"), dotFileName,
+		dotFileExtension)
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 
-	sm.dotFile = file
+	fsm.dotFile = file
 	return nil
 }
 
-// writeStateGraph ...
-func (sm *FiniteStateMachine) writeStateGraph() error {
+// adjacencyMapToString writes the in-memory representation of the directed graph to a DOT formatted string.
+func (fsm *FiniteStateMachine) adjacencyMapToString() error {
 	// write the header
-	err := sm.writeStateGraphString(dotFileHeader)
+	err := fsm.writeStateGraphString(dotFileHeader)
 	if err != nil {
 		return err
 	}
 
-	// write the graph state verticies, edges, and step counts
-	for vertex, edges := range sm.adjacencyMap {
+	// write the graph state vertices, edges, and step counts
+	for vertex, edges := range fsm.adjacencyMap {
 		for edge, steps := range edges {
 			stepBuf := bytes.Buffer{}
 			for _, step := range steps {
@@ -51,7 +69,7 @@ func (sm *FiniteStateMachine) writeStateGraph() error {
 			stepLabel := strings.TrimSuffix(stepBuf.String(), ",")
 			stateGraphString := fmt.Sprintf("\t%s -> %s [label=\"%s\"]\n", vertex, edge, stepLabel)
 
-			err = sm.writeStateGraphString(stateGraphString)
+			err = fsm.writeStateGraphString(stateGraphString)
 			if err != nil {
 				return err
 			}
@@ -59,7 +77,7 @@ func (sm *FiniteStateMachine) writeStateGraph() error {
 	}
 
 	// write the footer
-	err = sm.writeStateGraphString(dotFileFooter)
+	err = fsm.writeStateGraphString(dotFileFooter)
 	if err != nil {
 		return err
 	}
@@ -68,18 +86,22 @@ func (sm *FiniteStateMachine) writeStateGraph() error {
 }
 
 // recordStateTransition records a state transition in the finite-state machine.
-func (sm *FiniteStateMachine) recordStateTransition(curr, next string) {
+func (fsm *FiniteStateMachine) recordStateTransition(curr, next string) {
+	if !fsm.isTracing() {
+		return
+	}
+
 	// Increase the step count
-	sm.step++
+	fsm.step++
 
 	// Add state vertex and edge
-	_, haveVertex := sm.adjacencyMap[curr]
+	_, haveVertex := fsm.adjacencyMap[curr]
 
 	// Create a new state vertex if it does not already exist
 	if !haveVertex {
-		sm.adjacencyMap[curr] = map[string][]int64{}
+		fsm.adjacencyMap[curr] = map[string][]int64{}
 	}
-	edgeMap, _ := sm.adjacencyMap[curr]
+	edgeMap, _ := fsm.adjacencyMap[curr]
 
 	// Create a new edge to the state vertex if it does not already exist
 	_, haveEdge := edgeMap[next]
@@ -89,13 +111,13 @@ func (sm *FiniteStateMachine) recordStateTransition(curr, next string) {
 	edgeSteps, _ := edgeMap[next]
 
 	// Append the step count into the edge steps
-	edgeMap[next] = append(edgeSteps, sm.step)
+	edgeMap[next] = append(edgeSteps, fsm.step)
 }
 
 // writeStateGraphString ...
-func (sm *FiniteStateMachine) writeStateGraphString(str string) error {
-	if sm.dotFile != nil {
-		_, err := sm.dotFile.Write([]byte(str))
+func (fsm *FiniteStateMachine) writeStateGraphString(str string) error {
+	if fsm.dotFile != nil {
+		_, err := fsm.dotFile.Write([]byte(str))
 		if err != nil {
 			return err
 		}

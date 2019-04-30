@@ -8,7 +8,7 @@ given time.
 ## Installation
 
 ```bash
-go get github.com/austingebauer/stm
+go get github.com/austingebauer/go-fsm
 ```
 
 ## Usage
@@ -23,5 +23,5 @@ go run example/main.go
 
 To view the state transition diagram for the life of the finite-state machine:
 ```bash
-dot example/transition_graph.gv -T png | open -f -a /Applications/Preview.app
+dot example/dot_graph.gv -T png | open -f -a /Applications/Preview.app
 ```

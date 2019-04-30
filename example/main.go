@@ -14,7 +14,7 @@ func main() {
 	sm := machine.NewMachine()
 
 	// Log state transitions to a DOT (graph description language) file
-	err := sm.LogStateTransitionGraph("./example/transition_graph.gv")
+	err := sm.LogStateTransitionGraph("./example")
 	if err != nil {
 		log.Fatal(err)
 	}

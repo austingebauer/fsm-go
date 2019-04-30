@@ -18,6 +18,7 @@ type FiniteStateMachine struct {
 }
 
 // State is a function that handles a machine state and returns the next machine state.
+// A function that participates as a state in the finite-state machine must by of the State type.
 type State func() (State, error)
 
 // NewMachine initializes and returns a new finite-state machine.
@@ -28,17 +29,21 @@ func NewMachine() *FiniteStateMachine {
 	return &machine
 }
 
-// Run starts the finite-state machine by invoking the passed State.
-func (sm *FiniteStateMachine) Run(startState State) error {
+// Run starts the finite-state machine by invoking the passed State function.
+// Run will continue to invoke State functions returned by State functions as
+// the finite-state machine transitions from state to state.
+// Run will return an error if an error is returned from any State function.
+// Run will return nil if a terminal State is reached.
+func (fsm *FiniteStateMachine) Run(startState State) error {
 	if startState == nil {
 		return errors.New("start must not be nil")
 	}
 
-	sm.start = startState
-	err := sm.run()
+	fsm.start = startState
+	err := fsm.run()
 
-	if sm.dotFile != nil {
-		err := sm.writeStateGraph()
+	if fsm.isTracing() {
+		err := fsm.adjacencyMapToString()
 		if err != nil {
 			return err
 		}
@@ -47,20 +52,25 @@ func (sm *FiniteStateMachine) Run(startState State) error {
 	return err
 }
 
-// run ...
-func (sm *FiniteStateMachine) run() error {
+// run starts the finite-state machine and records state transitions.
+func (fsm *FiniteStateMachine) run() error {
 	var err error
 	var currentState, nextState State
-	currentState = sm.start
+	currentState = fsm.start
 	nextState = nil
 
 	// Continue to process steps while not in a terminal state and an error hasn't occurred
-	sm.recordStateTransition(startID, getFunctionName(currentState))
+	fsm.recordStateTransition(startID, getFunctionName(currentState))
 	for currentState != nil && err == nil {
 		nextState, err = currentState()
-		sm.recordStateTransition(getFunctionName(currentState), getFunctionName(nextState))
+		fsm.recordStateTransition(getFunctionName(currentState), getFunctionName(nextState))
 		currentState = nextState
 	}
 
 	return err
+}
+
+// isTracing returns true if the finite-state machine has been configured to trace states and transitions.
+func (fsm *FiniteStateMachine) isTracing() bool {
+	return fsm.dotFile != nil
 }
