@@ -19,10 +19,11 @@ strict digraph stategraph {
 	end [shape="circle", color="red", style="filled"]
 `
 	dotFileFooter = "}"
+	dotEdgeStrFmt = "\t%s -> %s [label=\" %s\",fontsize=10]\n"
 )
 
 const (
-	dotFileName = "dot_graph"
+	dotFileName      = "dot_graph"
 	dotFileExtension = "gv"
 )
 
@@ -67,7 +68,7 @@ func (fsm *FiniteStateMachine) adjacencyMapToString() error {
 			}
 
 			stepLabel := strings.TrimSuffix(stepBuf.String(), ",")
-			stateGraphString := fmt.Sprintf("\t%s -> %s [label=\"%s\"]\n", vertex, edge, stepLabel)
+			stateGraphString := fmt.Sprintf(dotEdgeStrFmt, vertex, edge, stepLabel)
 
 			err = fsm.writeStateGraphString(stateGraphString)
 			if err != nil {

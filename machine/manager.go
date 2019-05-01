@@ -1,7 +1,7 @@
 package machine
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 	"os"
 )
 
