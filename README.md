@@ -21,7 +21,7 @@ To run the example:
 go run example/main.go
 ```
 
-To view the state transition diagram for the life of the finite-state machine:
+To view the graph diagram for the life of the finite-state machine:
 ```bash
 dot example/dot_graph.gv -T png | open -f -a /Applications/Preview.app
 ```
