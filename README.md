@@ -1,4 +1,4 @@
-# go-fsm
+# go-fsm [![GoDoc](https://godoc.org/github.com/austingebauer/go-fsm?status.png)](https://godoc.org/github.com/austingebauer/go-fsm)
 
 A Golang library that can be used to construct finite-state machines.
 
