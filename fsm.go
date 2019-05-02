@@ -19,7 +19,7 @@ const (
 	dotFileName      = "dot_graph"
 	dotFileExtension = "gv"
 	stepFontSize     = 10
-	edgeFmtStr       = "\t%s -> %s [label=\"%s\",fontsize=%d]\n"
+	edgeFmtStr       = "\t%s -> %s [label=\" %s\",fontsize=%d]\n"
 	dotFileHeader    = `
 strict digraph stategraph {
 	start [shape="circle", color="green", style="filled"]
