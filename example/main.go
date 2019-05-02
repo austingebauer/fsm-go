@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/austingebauer/go-fsm/machine"
+	machine "github.com/austingebauer/go-fsm"
 	"log"
 	"math/rand"
 	"time"
