@@ -1,9 +1,11 @@
 # go-fsm [![GoDoc](https://godoc.org/github.com/austingebauer/go-fsm?status.png)](https://godoc.org/github.com/austingebauer/go-fsm)
 
-A Golang library that can be used to construct finite-state machines.
+A golang library that can be used to construct finite-state machines.
 
 A finite-state machine is an abstract machine that can be in exactly one of a finite number of states at any 
 given time.
+
+The API and design of this library is inspired by the finite-state machine implementation in the [golang template lexer](https://github.com/golang/go/blob/master/src/text/template/parse/lex.go#L105)
 
 ## Installation
 
