@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Run the finite-state machine until an error occurs or a terminal state is reached
-	err := sm.Run(WanderState)
+	err = sm.Run(WanderState)
 	if err != nil {
 		// An error occurred in a state and was returned from a state
 		log.Fatal(err)
