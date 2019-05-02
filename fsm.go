@@ -28,7 +28,8 @@ strict digraph stategraph {
 )
 
 // State is a function that handles a machine state and returns the next machine state.
-// A function that participates as a state in the finite-state machine must by of the State type.
+//
+// A function that participates as a state in the finite-state machine must be of the State type.
 type State func() (State, error)
 
 // A finiteStateMachine manages a finite-state machine.
