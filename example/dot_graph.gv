@@ -1,0 +1,14 @@
+
+strict digraph stategraph {
+	start [shape="circle", color="green", style="filled"]
+	end [shape="circle", color="red", style="filled"]
+	start -> WanderState [label="1"]
+	WanderState -> FleeState [label="2,10,13,20"]
+	WanderState -> ChaseState [label="4,6,16,23"]
+	FleeState -> WanderState [label="3"]
+	FleeState -> ReturnToBaseState [label="8,11,14,18,21"]
+	ChaseState -> WanderState [label="5"]
+	ChaseState -> FleeState [label="7,17"]
+	ChaseState -> end [label="24"]
+	ReturnToBaseState -> WanderState [label="9,12,15,19,22"]
+}
