@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	machine "github.com/austingebauer/go-fsm"
+	"github.com/austingebauer/go-fsm"
 	"log"
 	"math/rand"
 	"time"
@@ -11,26 +11,27 @@ import (
 
 func main() {
 	// Initialize a new machine
-	sm := machine.NewMachine()
+	sm := fsm.NewMachine()
 
-	// Log state transitions to a DOT (graph description language) file
+	// (optional) Log state transitions to a DOT graph description language file
 	err := sm.LogStateTransitionGraph("./example")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Run the finite-state machine until an error occurs or a terminal state is reached
-	err = sm.Run(WanderState)
+	err := sm.Run(WanderState)
 	if err != nil {
+		// An error occurred in a state and was returned from a state
 		log.Fatal(err)
 	}
 
 	// Terminal state reached
-	fmt.Println("game over: pacman was ate")
+	fmt.Println("game over: ghost ate pacman")
 }
 
-// The handler for pacman enemy WANDER_STATE.
-func WanderState() (machine.State, error) {
+// The handler for pacman ghost WANDER_STATE.
+func WanderState() (fsm.State, error) {
 	if randInt()%2 == 0 {
 		// Spotted pacman. Chase.
 		return ChaseState, nil
@@ -40,8 +41,8 @@ func WanderState() (machine.State, error) {
 	}
 }
 
-// The handler for pacman enemy CHASE_STATE.
-func ChaseState() (machine.State, error) {
+// The handler for pacman ghost CHASE_STATE.
+func ChaseState() (fsm.State, error) {
 	if randInt()%2 == 0 {
 		// Lose or eat pacman
 		if randInt()%2 == 0 {
@@ -63,14 +64,14 @@ func ChaseState() (machine.State, error) {
 	}
 }
 
-// The handler for pacman enemy RETURN_TO_BASE_STATE.
-func ReturnToBaseState() (machine.State, error) {
+// The handler for pacman ghost RETURN_TO_BASE_STATE.
+func ReturnToBaseState() (fsm.State, error) {
 	// Reached central base. Start wandering again.
 	return WanderState, nil
 }
 
-// The handler for pacman enemy FLEE_STATE.
-func FleeState() (machine.State, error) {
+// The handler for pacman ghost FLEE_STATE.
+func FleeState() (fsm.State, error) {
 	if randInt()%2 == 0 {
 		// Power pellet expires. Wander.
 		return WanderState, nil
