@@ -27,7 +27,7 @@ go run example/main.go
 
 To generate a state diagram showing the states, transitions, and steps of the finite-state machine execution:
 ```bash
-dot example/dot_graph.gv -T png > example/dot_graph.png
+dot example/dot_graph.gv -T png > example/dot_graph.png && open example/dot_graph.png
 ```
 
 An example image generated from running the example finite-state machine:
