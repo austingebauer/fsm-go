@@ -12,21 +12,21 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 const (
-	startID          = "start"
-	endID            = "end"
-	dotFileFooter    = "}"
+	dotFileTemplate = `strict digraph stategraph {
+	start [shape="circle", color="green", style="filled"]
+	end   [shape="circle", color="red", style="filled"]
+	{{range $vertex, $edges := .}}{{range $edge, $steps := $edges}}
+		{{$vertex}} -> {{$edge}} [label=" {{joinInt $steps ","}}",fontsize=10]
+	{{end}}{{end}}
+}`
 	dotFileName      = "dot_graph"
 	dotFileExtension = "gv"
-	stepFontSize     = 10
-	edgeFmtStr       = "\t%s -> %s [label=\" %s\",fontsize=%d]\n"
-	dotFileHeader    = `
-strict digraph stategraph {
-	start [shape="circle", color="green", style="filled"]
-	end [shape="circle", color="red", style="filled"]
-`
+	startID          = "start"
+	endID            = "end"
 )
 
 // State is a function that handles a machine state and returns the next machine state.
@@ -77,24 +77,6 @@ func (fsm *finiteStateMachine) Run(startState State) error {
 	return err
 }
 
-// run starts the finite-state machine and records state transitions.
-func (fsm *finiteStateMachine) run() error {
-	var err error
-	var currentState, nextState State
-	currentState = fsm.start
-	nextState = nil
-
-	// Continue to process steps while not in a terminal state and an error hasn't occurred
-	fsm.recordStateTransition(startID, getFunctionName(currentState))
-	for currentState != nil && err == nil {
-		nextState, err = currentState()
-		fsm.recordStateTransition(getFunctionName(currentState), getFunctionName(nextState))
-		currentState = nextState
-	}
-
-	return err
-}
-
 // LogStateTransitionGraph enables tracing of states and transitions for the life of the finite-state machine.
 // After the finite-state machine has reached a terminal or error state, a file named 'dot_graph.gv' will be
 // created in the passed file path. The contents of the 'dot_graph.gv' file will be in DOT graph description
@@ -119,34 +101,39 @@ func (fsm *finiteStateMachine) LogStateTransitionGraph(path string) error {
 	return nil
 }
 
+// run starts the finite-state machine and records state transitions.
+func (fsm *finiteStateMachine) run() error {
+	var err error
+	var currentState, nextState State
+	currentState = fsm.start
+	nextState = nil
+
+	// Continue to process steps while not in a terminal state and an error hasn't occurred
+	fsm.recordStateTransition(startID, getFunctionName(currentState))
+	for currentState != nil && err == nil {
+		nextState, err = currentState()
+		fsm.recordStateTransition(getFunctionName(currentState), getFunctionName(nextState))
+		currentState = nextState
+	}
+
+	return err
+}
+
 // adjacencyMapToDotGraph writes the in-memory representation of the directed graph to a DOT formatted string.
 func (fsm *finiteStateMachine) adjacencyMapToDotGraph() error {
-	// write the header
-	err := fsm.writeStateGraphString(dotFileHeader)
+	// Set up custom template functions
+	funcMap := template.FuncMap{
+		"joinInt": fsm.joinInt,
+	}
+
+	// Parse the template
+	tmpl, err := template.New(dotFileName).Funcs(funcMap).Parse(dotFileTemplate)
 	if err != nil {
 		return err
 	}
 
-	// write the graph state vertices, edges, and step counts
-	for vertex, edges := range fsm.adjacencyMap {
-		for edge, steps := range edges {
-			stepBuf := bytes.Buffer{}
-			for _, step := range steps {
-				stepBuf.WriteString(fmt.Sprintf("%s,", strconv.FormatInt(step, 10)))
-			}
-
-			stepLabel := strings.TrimSuffix(stepBuf.String(), ",")
-			stateGraphString := fmt.Sprintf(edgeFmtStr, vertex, edge, stepLabel, stepFontSize)
-
-			err = fsm.writeStateGraphString(stateGraphString)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// write the footer
-	err = fsm.writeStateGraphString(dotFileFooter)
+	// Execute the template
+	err = tmpl.Execute(fsm.dotFile, fsm.adjacencyMap)
 	if err != nil {
 		return err
 	}
@@ -183,17 +170,6 @@ func (fsm *finiteStateMachine) recordStateTransition(curr, next string) {
 	edgeMap[next] = append(edgeSteps, fsm.step)
 }
 
-// writeStateGraphString writes the passed string into the dot file if it exists.
-func (fsm *finiteStateMachine) writeStateGraphString(str string) error {
-	if fsm.dotFile != nil {
-		_, err := fsm.dotFile.Write([]byte(str))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // isTracing returns true if the finite-state machine has been configured to trace states and transitions.
 func (fsm *finiteStateMachine) isTracing() bool {
 	return fsm.dotFile != nil
@@ -210,4 +186,13 @@ func getFunctionName(f State) string {
 	funcSegments := strings.Split(packageFuncName, "/")
 	funcName := funcSegments[len(funcSegments)-1]
 	return strings.Split(funcName, ".")[1]
+}
+
+// joinInt joins the passed array of integers into a string delimited by the passed delimiter
+func (fsm *finiteStateMachine) joinInt(steps []int64, delimiter string) string {
+	stepBuf := bytes.Buffer{}
+	for _, step := range steps {
+		stepBuf.WriteString(fmt.Sprintf("%s%s", strconv.FormatInt(step, 10), delimiter))
+	}
+	return strings.TrimSuffix(stepBuf.String(), delimiter)
 }
