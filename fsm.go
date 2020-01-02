@@ -1,6 +1,4 @@
 // Package fsm is a library that can be used to construct finite-state machines.
-//
-// By Austin Gebauer
 package fsm
 
 import (
